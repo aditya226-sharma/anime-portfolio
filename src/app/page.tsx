@@ -1,64 +1,207 @@
-import Image from "next/image";
+"use client";
+
+import { useEffect, useCallback, useRef } from "react";
+import { motion } from "framer-motion";
+import { useAppStore } from "@/stores/useAppStore";
+import dynamic from "next/dynamic";
+
+// Dynamic imports for SSR safety
+const IntroCinematic = dynamic(
+  () => import("@/components/intro/IntroCinematic"),
+  { ssr: false }
+);
+const CharacterSelector = dynamic(
+  () => import("@/components/guide/CharacterSelector"),
+  { ssr: false }
+);
+const Scene3D = dynamic(() => import("@/components/3d/Scene3D"), {
+  ssr: false,
+  loading: () => (
+    <div className="absolute inset-0 z-0 bg-[#050510] flex items-center justify-center">
+      <div className="w-16 h-16 border-2 border-cyan-400/30 border-t-cyan-400 rounded-full animate-spin" />
+    </div>
+  ),
+});
+const HUD = dynamic(() => import("@/components/hud/HUD"), { ssr: false });
+const GuideDialogue = dynamic(
+  () => import("@/components/guide/GuideDialogue"),
+  { ssr: false }
+);
+const Terminal = dynamic(() => import("@/components/terminal/Terminal"), {
+  ssr: false,
+});
+const WeatherEffects = dynamic(
+  () => import("@/components/effects/WeatherEffects"),
+  { ssr: false }
+);
+const MusicPlayer = dynamic(() => import("@/components/ui/MusicPlayer"), {
+  ssr: false,
+});
+const SettingsPanel = dynamic(
+  () => import("@/components/ui/SettingsPanel"),
+  { ssr: false }
+);
+
+// Sections
+const AboutSection = dynamic(
+  () => import("@/components/sections/AboutSection"),
+  { ssr: false }
+);
+const SkillsSection = dynamic(
+  () => import("@/components/sections/SkillsSection"),
+  { ssr: false }
+);
+const ProjectsSection = dynamic(
+  () => import("@/components/sections/ProjectsSection"),
+  { ssr: false }
+);
+const ExperienceSection = dynamic(
+  () => import("@/components/sections/ExperienceSection"),
+  { ssr: false }
+);
+const CertificationsSection = dynamic(
+  () => import("@/components/sections/CertificationsSection"),
+  { ssr: false }
+);
+const TimelineSection = dynamic(
+  () => import("@/components/sections/TimelineSection"),
+  { ssr: false }
+);
+const ContactSection = dynamic(
+  () => import("@/components/sections/ContactSection"),
+  { ssr: false }
+);
 
 export default function Home() {
+  const {
+    introComplete,
+    selectedCharacter,
+    setCurrentSection,
+    toggleTerminal,
+  } = useAppStore();
+  const mainRef = useRef<HTMLDivElement>(null);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Enter" && !introComplete) return;
+      if (e.ctrlKey && e.key === "`") {
+        e.preventDefault();
+        toggleTerminal();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [introComplete, toggleTerminal]);
+
+  // Track current section via scroll
+  useEffect(() => {
+    if (!introComplete || !selectedCharacter) return;
+
+    const handleScroll = () => {
+      const sections = document.querySelectorAll("[data-section]");
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+
+      sections.forEach((section) => {
+        const el = section as HTMLElement;
+        const top = el.offsetTop;
+        const bottom = top + el.offsetHeight;
+        if (scrollPos >= top && scrollPos < bottom) {
+          setCurrentSection(el.dataset.section as any);
+        }
+      });
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [introComplete, selectedCharacter, setCurrentSection]);
+
+  // Show intro
+  if (!introComplete) {
+    return (
+      <>
+        <IntroCinematic />
+        {!introComplete && <CharacterSelector />}
+      </>
+    );
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div ref={mainRef} className="relative">
+      {/* 3D Background */}
+      <div className="fixed inset-0 z-0">
+        <Scene3D />
+      </div>
+
+      {/* Weather Effects */}
+      <WeatherEffects />
+
+      {/* HUD */}
+      <HUD />
+
+      {/* Guide Dialogue */}
+      <GuideDialogue />
+
+      {/* Terminal */}
+      <Terminal />
+
+      {/* Music Player */}
+      <MusicPlayer />
+
+      {/* Settings */}
+      <SettingsPanel />
+
+      {/* Main content */}
+      <main className="relative z-10">
+        <div data-section="about">
+          <AboutSection />
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <div data-section="skills">
+          <SkillsSection />
         </div>
+
+        <div data-section="projects">
+          <ProjectsSection />
+        </div>
+
+        <div data-section="experience">
+          <ExperienceSection />
+        </div>
+
+        <div data-section="certifications">
+          <CertificationsSection />
+        </div>
+
+        <div data-section="timeline">
+          <TimelineSection />
+        </div>
+
+        <div data-section="contact">
+          <ContactSection />
+        </div>
+
+        {/* Footer */}
+        <footer className="relative z-10 py-12 text-center border-t border-white/5">
+          <motion.p
+            className="text-sm text-white/20"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+          >
+            Built with passion by Aditya Sharma &middot; AnimeVerse AI
+            Portfolio
+          </motion.p>
+          <motion.p
+            className="text-xs text-white/10 mt-2"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2 }}
+          >
+            Next.js &middot; Three.js &middot; GSAP &middot; Framer Motion
+          </motion.p>
+        </footer>
       </main>
     </div>
   );
