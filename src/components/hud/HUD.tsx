@@ -144,7 +144,7 @@ export default function HUD() {
                 const col = i % 3;
                 const isActive = currentSection === section;
                 const sectionOrder = [...sections];
-                const isComplete = sectionOrder.indexOf(currentSection) > i;
+                const isComplete = sectionOrder.indexOf(currentSection as typeof sections[number]) > i;
                 return (
                   <motion.div
                     key={section}
@@ -168,8 +168,8 @@ export default function HUD() {
               <motion.div
                 className="absolute w-3 h-3 rounded-full"
                 style={{
-                  left: `${12 + (sections.indexOf(currentSection) % 3) * 38 - 3}%`,
-                  top: `${12 + Math.floor(sections.indexOf(currentSection) / 3) * 40 - 3}%`,
+                  left: `${12 + (sections.indexOf(currentSection as typeof sections[number]) % 3) * 38 - 3}%`,
+                  top: `${12 + Math.floor(sections.indexOf(currentSection as typeof sections[number]) / 3) * 40 - 3}%`,
                   background: character?.color || "#00f0ff",
                   boxShadow: `0 0 8px ${character?.color || "#00f0ff"}`,
                 }}
@@ -193,7 +193,7 @@ export default function HUD() {
         </div>
         <div className="flex gap-1.5 items-center">
           {sections.map((section, i) => {
-            const currentIdx = sections.indexOf(currentSection);
+            const currentIdx = sections.indexOf(currentSection as typeof sections[number]);
             const isComplete = i < currentIdx;
             const isActive = currentSection === section;
             return (
