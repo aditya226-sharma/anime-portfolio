@@ -60,7 +60,7 @@ export default function IntroCinematic() {
   const [subtitleText, setSubtitleText] = useState("");
   const [showStartButton, setShowStartButton] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioRef = useRef<{ stop: () => void } | null>(null);
 
   // Start wind sound on mount
   useEffect(() => {
